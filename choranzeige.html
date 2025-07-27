@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Choranzeige</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: black;
+      color: white;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+      cursor: none;
+    }
+
+    #container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      width: 100%;
+      text-align: center;
+    }
+
+    #editableText {
+      display: inline-block;
+      color: white;
+      outline: none;
+      /*font-size: 1000px;*/
+      font-size: 90vw;
+      /*max-width: 90vw;*/
+      max-height: 90vh;
+      caret-color: transparent;
+      overflow: hidden;
+      /* Kein Scrollen */
+      white-space: pre;
+      /* Nur Umbrueche durch Enter beibehalten */
+      user-select: none;
+
+    }
+
+    #clock {
+      display: block;
+      z-index: 100;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 30vw;
+      white-space: nowrap;
+    }
+
+    .blink {
+      opacity: 1;
+      transition: opacity 0,4s;
+    }
+
+    .blink.hidden {
+      opacity: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="container">
+    <div id="editableText" contenteditable="true" spellcheck="false"></div>
+  </div>
+  <div id="clock">
+    <span id="hours">--</span><span id="colon" class="blink">:</span><span id="minutes">--</span>
+  </div>
+
+  <script>
+    const editableText = document.getElementById('editableText');
+    const clock = document.getElementById('clock');
+
+    const hoursEl = document.getElementById('hours');
+    const minutesEl = document.getElementById('minutes');
+    const colonEl = document.getElementById('colon');
+
+    function adjustFontSize() {
+      const maxFontSize = 1000;
+      const minFontSize = 10;
+      const tolerance = 1; // px
+
+      let low = minFontSize;
+      let high = maxFontSize;
+      let bestFit = minFontSize;
+
+      while (low <= high) {
+        const mid = Math.floor((low + high) / 2);
+        editableText.style.fontSize = mid + 'px';
+
+        const overflows = editableText.scrollHeight > window.innerHeight * 0.9 ||
+          editableText.scrollWidth > window.innerWidth * 0.9;
+
+        if (!overflows) {
+          bestFit = mid;
+          low = mid + 1;
+        } else {
+          high = mid - 1;
+        }
+      }
+
+      editableText.style.fontSize = bestFit + 'px';
+
+      if (editableText.innerText.trim() === "") {
+        clock.style.display = "block";
+        editableText.style.fontSize = "10vw";
+      } else {
+        clock.style.display = "none";
+      }
+    }
+
+
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+
+      hoursEl.textContent = hours;
+      minutesEl.textContent = minutes;
+
+      // Blinke-Doppelpunkt
+      colonEl.classList.toggle('hidden');
+    }
+
+    function focusEditableTextAtEnd() {
+      editableText.focus();
+
+      // Cursor ans Ende setzen
+      const range = document.createRange();
+      range.selectNodeContents(editableText);
+      range.collapse(false); // false = Ende
+
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+
+    // Beim Laden der Seite
+    window.addEventListener('load', focusEditableTextAtEnd);
+
+    // Wenn Fokus verloren geht, erneut setzen
+    editableText.addEventListener('blur', () => {
+      setTimeout(() => {
+        focusEditableTextAtEnd();
+      }, 10);
+    });
+
+    document.addEventListener('keydown', (event) => {
+      focusEditableTextAtEnd();
+      if (event.key === 'Delete') {
+        editableText.innerText = '';
+        adjustFontSize(); // Schriftgroesse neu anpassen
+      }
+    });
+
+    // Cursor immer ans Ende, wenn geklickt wird
+    editableText.addEventListener('mousedown', (event) => {
+      event.preventDefault(); // verhindert das normale Setzen des Cursors
+      focusEditableTextAtEnd();
+    });
+
+
+
+    setInterval(updateClock, 1000);
+    updateClock(); // Initialer Aufruf
+
+    editableText.addEventListener('focus', focusEditableTextAtEnd);
+    editableText.addEventListener('input', focusEditableTextAtEnd);
+    editableText.addEventListener('input', adjustFontSize);
+    window.addEventListener('resize', adjustFontSize);
+
+    // Initiale Anpassung
+    adjustFontSize();
+  </script>
+</body>
+
+</html>
