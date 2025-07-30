@@ -12,6 +12,8 @@ Hauptmerkmale:
 - Cursor und Mauszeiger ausgeblendet
 - Text nicht markierbar, Eingabe nur am Ende des Textes möglich
 
+![Anleitung zur einrichtung für ein Raspberry Pi 3B](raspberry_3B_kiosk_setup.md)
+
 ---
 
 ## 🖼 **Screenshots**
